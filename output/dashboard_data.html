@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="vi"><head><meta charset="UTF-8">
+<title>Data Context Dashboard — Graph Analytics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:dark;}
+*{box-sizing:border-box;}
+body{margin:0;background:#0B0E11;color:#D7DEE6;font-family:'IBM Plex Sans',sans-serif;}
+.wrap{max-width:1180px;margin:0 auto;padding:40px 28px 80px;}
+header{border-bottom:1px solid #232B34;padding-bottom:24px;margin-bottom:28px;}
+h1{font-size:22px;margin:0 0 4px;font-weight:700;letter-spacing:-.01em;}
+.sub{color:#7C8A99;font-size:13px;font-family:'IBM Plex Mono',monospace;}
+.eyebrow{color:#4FA8FF;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.14em;
+          text-transform:uppercase;margin-bottom:6px;}
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:28px;}
+.kpi{background:#12161C;border:1px solid #232B34;border-radius:10px;padding:16px 18px;}
+.kpi-label{font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#7C8A99;text-transform:uppercase;
+           letter-spacing:.08em;margin-bottom:6px;}
+.kpi-value{font-size:18px;font-weight:700;color:#4FA8FF;}
+.kpi-sub{font-size:11.5px;color:#7C8A99;margin-top:4px;}
+.callout{background:#12161C;border:1px solid #232B34;border-left:3px solid #4FA8FF;border-radius:8px;
+         padding:16px 20px;margin-bottom:28px;font-size:13.5px;line-height:1.75;color:#C3CCD6;}
+section{margin-bottom:52px;}
+.prob-head{display:flex;gap:16px;align-items:flex-start;margin-bottom:18px;padding-bottom:14px;
+           border-bottom:1px solid #232B34;}
+.prob-num{font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:700;color:#C792EA;
+          background:#C792EA18;border:1px solid #C792EA44;border-radius:6px;padding:2px 12px;flex-shrink:0;}
+.prob-title{font-size:19px;font-weight:700;}
+.prob-sub{font-size:13px;color:#7C8A99;margin-top:2px;}
+.prob-desc{font-size:13px;color:#C3CCD6;line-height:1.7;margin-top:8px;max-width:900px;}
+.crit-card{background:#12161C;border:1px solid #232B34;border-radius:10px;padding:20px 22px;margin-bottom:16px;}
+.crit-name{font-size:14.5px;font-weight:700;margin-bottom:8px;}
+table{width:100%;border-collapse:collapse;font-family:'IBM Plex Mono',monospace;font-size:11.8px;}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid #232B34;vertical-align:top;}
+th{color:#7C8A99;font-weight:500;text-transform:uppercase;font-size:10px;letter-spacing:.06em;}
+.panel-table{background:#12161C;border:1px solid #232B34;border-radius:8px;overflow:hidden;margin-bottom:16px;}
+.note{background:#0E1116;border:1px solid #232B34;border-left:3px solid #4FA8FF;border-radius:8px;
+      padding:14px 18px;margin-top:8px;font-size:13px;line-height:1.75;color:#C3CCD6;}
+.note b{color:#EDF1F5;}
+.note.good{border-left-color:#33D6A6;}
+.note .lbl{display:block;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#4FA8FF;
+           text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;}
+.note.good .lbl{color:#33D6A6;}
+footer{color:#7C8A99;font-family:'IBM Plex Mono',monospace;font-size:11px;margin-top:40px;}
+</style></head>
+<body><div class="wrap">
+<header>
+  <div class="eyebrow">Data Context — không phải kết quả mô hình</div>
+  <h1>Bối cảnh & phương pháp sinh dữ liệu mô phỏng</h1>
+  <div class="sub">Toàn bộ số liệu trong trang này được tính trực tiếp từ generate() của từng module ở mỗi lần chạy</div>
+</header>
+<div class="kpi-row"><div class="kpi"><div class="kpi-label">Seed cố định</div><div class="kpi-value">42</div><div class="kpi-sub">toàn bộ số liệu tái lập được</div></div><div class="kpi"><div class="kpi-label">Quy mô</div><div class="kpi-value">800 / 3.200 / 12.800</div><div class="kpi-sub">SMALL / MEDIUM / LARGE</div></div><div class="kpi"><div class="kpi-label">Nguồn sinh dữ liệu</div><div class="kpi-value">3 module độc lập</div><div class="kpi-sub">sim_data · skip_tracing · identity_resolution</div></div><div class="kpi"><div class="kpi-label">Loại dữ liệu</div><div class="kpi-value">100% giả lập</div><div class="kpi-sub">không dùng dữ liệu khách hàng thật</div></div></div>
+<div class="callout">
+  Trang này mô tả <b>bản chất và cách sinh ra dữ liệu</b> dùng cho 3 bài toán (Supply Chain/Segmentation, Skip
+  Tracing, Identity Resolution) — không phải kết quả AUC/F1/uplift của mô hình (xem dashboard.html cho phần đó).
+  Vì dữ liệu là giả lập, các con số % ở đây phản ánh <b>tham số được chọn khi thiết kế mô phỏng</b>, không phải
+  fact thị trường thật.
+</div>
+<section>
+<div class="prob-head"><span class="prob-num">01</span>
+      <div><div class="prob-title">sim_data.py — Dữ liệu lõi (Supply Chain & Segmentation)</div><div class="prob-sub">Khách hàng + đồ thị quan hệ giao dịch, sinh theo cấu trúc cộng đồng</div>
+      <div class="prob-desc">Mỗi khách hàng thuộc 1 trong N cộng đồng; cạnh đồ thị được sinh thiên lệch để phần lớn nằm trong cùng cộng đồng (mô phỏng homophily). ~12% cộng đồng có rủi ro nội tại cao hơn hẳn — số liệu dưới đây được tính trực tiếp từ dữ liệu sinh ra ở mỗi lần chạy, không phải tham số khai báo sẵn.</div></div></div>
+<div class="panel-table"><table><tr><th>Quy mô</th><th>n khách hàng</th><th>n cộng đồng</th><th>n cộng đồng rủi ro cao</th><th>Bậc trung bình (degree)</th><th>% cạnh trong cùng cộng đồng</th><th>Tỷ lệ default</th></tr><tr><td>SMALL</td><td>800</td><td>10</td><td>1</td><td>7.6</td><td>86.4%</td><td>33.9%</td></tr><tr><td>MEDIUM</td><td>3200</td><td>21</td><td>2</td><td>8.8</td><td>85.4%</td><td>30.2%</td></tr><tr><td>LARGE</td><td>12800</td><td>85</td><td>10</td><td>9.7</td><td>84.7%</td><td>35.1%</td></tr></table></div>
+<div class="crit-card">
+  <div class="crit-name">Default rate: cộng đồng rủi ro cao vs cộng đồng thường</div>
+  <svg viewBox="0 0 740 234" width="100%"><text x="120" y="30" text-anchor="end" font-size="11.5" fill="#D7DEE6" font-family="IBM Plex Mono,monospace">SMALL · nhóm rủi ro</text><rect x="130" y="17" width="469.6" height="18" rx="3" fill="#F0654A"/><text x="607.6" y="30" font-size="11.5" font-weight="600" fill="#F0654A" font-family="IBM Plex Mono,monospace">84.7%</text><text x="120" y="64" text-anchor="end" font-size="11.5" fill="#D7DEE6" font-family="IBM Plex Mono,monospace">MEDIUM · nhóm rủi ro</text><rect x="130" y="51" width="461.2" height="18" rx="3" fill="#F0654A"/><text x="599.2" y="64" font-size="11.5" font-weight="600" fill="#F0654A" font-family="IBM Plex Mono,monospace">83.2%</text><text x="120" y="98" text-anchor="end" font-size="11.5" fill="#D7DEE6" font-family="IBM Plex Mono,monospace">LARGE · nhóm rủi ro</text><rect x="130" y="85" width="439.6" height="18" rx="3" fill="#F0654A"/><text x="577.6" y="98" font-size="11.5" font-weight="600" fill="#F0654A" font-family="IBM Plex Mono,monospace">79.3%</text><text x="120" y="132" text-anchor="end" font-size="11.5" fill="#D7DEE6" font-family="IBM Plex Mono,monospace">SMALL · nhóm thường</text><rect x="130" y="119" width="159.9" height="18" rx="3" fill="#4FA8FF"/><text x="297.9" y="132" font-size="11.5" font-weight="600" fill="#4FA8FF" font-family="IBM Plex Mono,monospace">28.8%</text><text x="120" y="166" text-anchor="end" font-size="11.5" fill="#D7DEE6" font-family="IBM Plex Mono,monospace">MEDIUM · nhóm thường</text><rect x="130" y="153" width="138.8" height="18" rx="3" fill="#4FA8FF"/><text x="276.8" y="166" font-size="11.5" font-weight="600" fill="#4FA8FF" font-family="IBM Plex Mono,monospace">25.1%</text><text x="120" y="200" text-anchor="end" font-size="11.5" fill="#D7DEE6" font-family="IBM Plex Mono,monospace">LARGE · nhóm thường</text><rect x="130" y="187" width="161.1" height="18" rx="3" fill="#4FA8FF"/><text x="299.1" y="200" font-size="11.5" font-weight="600" fill="#4FA8FF" font-family="IBM Plex Mono,monospace">29.1%</text></svg>
+</div>
+<div class="note good"><span class="lbl">Insight</span>Ở mọi quy mô, nhóm cộng đồng rủi ro cao có tỷ lệ default cao gấp 2.7 lần nhóm còn lại (Large) — đây chính là tín hiệu mà feature đồ thị (degree, community, distance-to-hub) kỳ vọng bắt được. Tương quan debt_amount ↔ application_amount ≈ 0.92 — cẩn thận multicollinearity khi diễn giải feature importance. Tỷ lệ cạnh nằm trong cùng cộng đồng luôn quanh 85%, đúng như tham số within_mask=0.85 đã khai báo.</div>
+</section>
+<section>
+<div class="prob-head"><span class="prob-num">02</span>
+      <div><div class="prob-title">skip_tracing.py — Kênh liên hệ gián tiếp</div><div class="prob-sub">Khách hàng, số điện thoại, người liên quan/bảo lãnh, địa chỉ dùng chung</div>
+      <div class="prob-desc">Baseline chỉ dùng 1 kênh (địa chỉ); graph hợp 3 kênh độc lập xác suất (bảo lãnh / người liên quan / địa chỉ dùng chung). Vì 3 kênh độc lập, reach_graph cao hơn baseline gần như chắc chắn về mặt xác suất thuần, không chỉ nhờ suy luận quan hệ phức tạp.</div></div></div>
+<div class="panel-table"><table><tr><th>Quy mô</th><th>n khách hàng</th><th>Tỷ lệ mất liên lạc</th><th>Reach base</th><th>Reach graph</th></tr><tr><td>SMALL</td><td>800</td><td>14.2%</td><td>56.1%</td><td>98.2%</td></tr><tr><td>MEDIUM</td><td>3200</td><td>12.6%</td><td>50.5%</td><td>95.8%</td></tr><tr><td>LARGE</td><td>12800</td><td>12.7%</td><td>53.9%</td><td>97.1%</td></tr></table></div>
+<div class="crit-card">
+  <div class="crit-name">Đóng góp từng kênh trong nhóm mất liên lạc</div>
+  <svg viewBox="0 0 740 336" width="100%"><text x="120" y="30" text-anchor="end" font-size="11.5" fill="#D7DEE6" font-family="IBM Plex Mono,monospace">SMALL · người bảo lãnh</text><rect x="130" y="17" width="395.1" height="18" rx="3" fill="#C792EA"/><text x="533.1" y="30" font-size="11.5" font-weight="600" fill="#C792EA" font-family="IBM Plex Mono,monospace">74.6%</text><text x="120" y="64" text-anchor="end" font-size="11.5" fill="#D7DEE6" font-family="IBM Plex Mono,monospace">MEDIUM · người bảo lãnh</text><rect x="130" y="51" width="392.2" height="18" rx="3" fill="#C792EA"/><text x="530.2" y="64" font-size="11.5" font-weight="600" fill="#C792EA" font-family="IBM Plex Mono,monospace">74.0%</text><text x="120" y="98" text-anchor="end" font-size="11.5" fill="#D7DEE6" font-family="IBM Plex Mono,monospace">LARGE · người bảo lãnh</text><rect x="130" y="85" width="395.0" height="18" rx="3" fill="#C792EA"/><text x="533.0" y="98" font-size="11.5" font-weight="600" fill="#C792EA" font-family="IBM Plex Mono,monospace">74.5%</text><text x="120" y="132" text-anchor="end" font-size="11.5" fill="#D7DEE6" font-family="IBM Plex Mono,monospace">SMALL · bất kỳ người liên quan</text><rect x="130" y="119" width="464.8" height="18" rx="3" fill="#4FA8FF"/><text x="602.8" y="132" font-size="11.5" font-weight="600" fill="#4FA8FF" font-family="IBM Plex Mono,monospace">87.7%</text><text x="120" y="166" text-anchor="end" font-size="11.5" fill="#D7DEE6" font-family="IBM Plex Mono,monospace">MEDIUM · bất kỳ người liên quan</text><rect x="130" y="153" width="469.6" height="18" rx="3" fill="#4FA8FF"/><text x="607.6" y="166" font-size="11.5" font-weight="600" fill="#4FA8FF" font-family="IBM Plex Mono,monospace">88.6%</text><text x="120" y="200" text-anchor="end" font-size="11.5" fill="#D7DEE6" font-family="IBM Plex Mono,monospace">LARGE · bất kỳ người liên quan</text><rect x="130" y="187" width="467.2" height="18" rx="3" fill="#4FA8FF"/><text x="605.2" y="200" font-size="11.5" font-weight="600" fill="#4FA8FF" font-family="IBM Plex Mono,monospace">88.2%</text><text x="120" y="234" text-anchor="end" font-size="11.5" fill="#D7DEE6" font-family="IBM Plex Mono,monospace">SMALL · địa chỉ dùng chung</text><rect x="130" y="221" width="265.0" height="18" rx="3" fill="#33D6A6"/><text x="403.0" y="234" font-size="11.5" font-weight="600" fill="#33D6A6" font-family="IBM Plex Mono,monospace">50.0%</text><text x="120" y="268" text-anchor="end" font-size="11.5" fill="#D7DEE6" font-family="IBM Plex Mono,monospace">MEDIUM · địa chỉ dùng chung</text><rect x="130" y="255" width="282.0" height="18" rx="3" fill="#33D6A6"/><text x="420.0" y="268" font-size="11.5" font-weight="600" fill="#33D6A6" font-family="IBM Plex Mono,monospace">53.2%</text><text x="120" y="302" text-anchor="end" font-size="11.5" fill="#D7DEE6" font-family="IBM Plex Mono,monospace">LARGE · địa chỉ dùng chung</text><rect x="130" y="289" width="296.0" height="18" rx="3" fill="#33D6A6"/><text x="434.0" y="302" font-size="11.5" font-weight="600" fill="#33D6A6" font-family="IBM Plex Mono,monospace">55.9%</text></svg>
+</div>
+<div class="note good"><span class="lbl">Insight</span>Kênh "bất kỳ người liên quan" luôn đóng góp cao nhất (~88% ở Large), cao hơn cả kênh người bảo lãnh dù người bảo lãnh là kênh "đáng tin" hơn về nghiệp vụ — vì group người liên quan có thể gồm 0–2 người, xác suất ít nhất 1 người còn active cộng dồn nhanh. Diễn giải hợp lý: kết quả minh hoạ giá trị của việc liên kết nhiều nguồn liên hệ, hơn là bằng chứng về sức mạnh suy luận đồ thị nói chung.</div>
+</section>
+<section>
+<div class="prob-head"><span class="prob-num">03</span>
+      <div><div class="prob-title">identity_resolution.py — Hợp nhất định danh</div><div class="prob-sub">Bản ghi trùng lặp có nhiễu thực tế: đổi SĐT, đổi địa chỉ, lỗi gõ số định danh</div>
+      <div class="prob-desc">~14% người có 2 bản ghi. Với mỗi cặp trùng, dữ liệu mô phỏng nhiễu có chủ đích trên từng trường — đây là phần dữ liệu duy nhất trong repo có nhiễu thực tế được thiết kế riêng, khác hẳn phần dữ liệu tài chính sạch ở sim_data.py.</div></div></div>
+<div class="panel-table"><table><tr><th>Quy mô</th><th>n người thật</th><th>n bản ghi</th><th>n người có bản ghi trùng</th><th>Tỷ lệ trùng</th></tr><tr><td>SMALL</td><td>800</td><td>926</td><td>126</td><td>15.8%</td></tr><tr><td>MEDIUM</td><td>3200</td><td>3654</td><td>454</td><td>14.2%</td></tr><tr><td>LARGE</td><td>12800</td><td>14576</td><td>1776</td><td>13.9%</td></tr></table></div>
+<div class="crit-card">
+  <div class="crit-name">Tỷ lệ cặp bản ghi trùng vẫn giữ nguyên giá trị trường (theo trường)</div>
+  <svg viewBox="0 0 740 336" width="100%"><text x="120" y="30" text-anchor="end" font-size="11.5" fill="#D7DEE6" font-family="IBM Plex Mono,monospace">SMALL · giữ cùng SĐT</text><rect x="130" y="17" width="418.6" height="18" rx="3" fill="#4FA8FF"/><text x="556.6" y="30" font-size="11.5" font-weight="600" fill="#4FA8FF" font-family="IBM Plex Mono,monospace">58.7%</text><text x="120" y="64" text-anchor="end" font-size="11.5" fill="#D7DEE6" font-family="IBM Plex Mono,monospace">MEDIUM · giữ cùng SĐT</text><rect x="130" y="51" width="386.2" height="18" rx="3" fill="#4FA8FF"/><text x="524.2" y="64" font-size="11.5" font-weight="600" fill="#4FA8FF" font-family="IBM Plex Mono,monospace">54.2%</text><text x="120" y="98" text-anchor="end" font-size="11.5" fill="#D7DEE6" font-family="IBM Plex Mono,monospace">LARGE · giữ cùng SĐT</text><rect x="130" y="85" width="397.4" height="18" rx="3" fill="#4FA8FF"/><text x="535.4" y="98" font-size="11.5" font-weight="600" fill="#4FA8FF" font-family="IBM Plex Mono,monospace">55.7%</text><text x="120" y="132" text-anchor="end" font-size="11.5" fill="#D7DEE6" font-family="IBM Plex Mono,monospace">SMALL · giữ cùng địa chỉ</text><rect x="130" y="119" width="350.8" height="18" rx="3" fill="#C792EA"/><text x="488.8" y="132" font-size="11.5" font-weight="600" fill="#C792EA" font-family="IBM Plex Mono,monospace">49.2%</text><text x="120" y="166" text-anchor="end" font-size="11.5" fill="#D7DEE6" font-family="IBM Plex Mono,monospace">MEDIUM · giữ cùng địa chỉ</text><rect x="130" y="153" width="321.9" height="18" rx="3" fill="#C792EA"/><text x="459.9" y="166" font-size="11.5" font-weight="600" fill="#C792EA" font-family="IBM Plex Mono,monospace">45.2%</text><text x="120" y="200" text-anchor="end" font-size="11.5" fill="#D7DEE6" font-family="IBM Plex Mono,monospace">LARGE · giữ cùng địa chỉ</text><rect x="130" y="187" width="315.5" height="18" rx="3" fill="#C792EA"/><text x="453.5" y="200" font-size="11.5" font-weight="600" fill="#C792EA" font-family="IBM Plex Mono,monospace">44.3%</text><text x="120" y="234" text-anchor="end" font-size="11.5" fill="#D7DEE6" font-family="IBM Plex Mono,monospace">SMALL · giữ cùng số định danh</text><rect x="130" y="221" width="469.6" height="18" rx="3" fill="#33D6A6"/><text x="607.6" y="234" font-size="11.5" font-weight="600" fill="#33D6A6" font-family="IBM Plex Mono,monospace">65.9%</text><text x="120" y="268" text-anchor="end" font-size="11.5" fill="#D7DEE6" font-family="IBM Plex Mono,monospace">MEDIUM · giữ cùng số định danh</text><rect x="130" y="255" width="467.9" height="18" rx="3" fill="#33D6A6"/><text x="605.9" y="268" font-size="11.5" font-weight="600" fill="#33D6A6" font-family="IBM Plex Mono,monospace">65.6%</text><text x="120" y="302" text-anchor="end" font-size="11.5" fill="#D7DEE6" font-family="IBM Plex Mono,monospace">LARGE · giữ cùng số định danh</text><rect x="130" y="289" width="459.2" height="18" rx="3" fill="#33D6A6"/><text x="597.2" y="302" font-size="11.5" font-weight="600" fill="#33D6A6" font-family="IBM Plex Mono,monospace">64.4%</text></svg>
+</div>
+<div class="panel-table"><table><tr><th>Quy mô</th><th>Số điện thoại bị trùng ≥2 người khác nhau</th><th>Địa chỉ bị trùng ≥2 người khác nhau</th></tr><tr><td>SMALL</td><td>0</td><td>0</td></tr><tr><td>MEDIUM</td><td>0</td><td>0</td></tr><tr><td>LARGE</td><td>17</td><td>2</td></tr></table></div>
+<div class="note good"><span class="lbl">Insight</span>Số định danh (national_id) là trường ổn định nhất giữa 2 bản ghi trùng (64% ở Large) — vậy baseline exact-match trên ID vẫn đúng cho phần lớn trường hợp, chỉ sai khi rơi vào ~40% ca có lỗi gõ. Ngược lại SĐT/địa chỉ đổi khá thường xuyên nên graph_match (nối theo SĐT/địa chỉ) không bắt được toàn bộ recall còn thiếu. Ở quy mô Large đã xuất hiện 17 số điện thoại và 2 địa chỉ bị 2 người khác nhau cùng dùng một cách tình cờ — đây là nguồn gây giảm precision khi n lớn.</div>
+</section>
+<footer>Generated directly from sim_data.py, skip_tracing.py, identity_resolution.py — synthetic data, seed=42.</footer>
+</div></body></html>
