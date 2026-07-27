@@ -38,7 +38,7 @@ env/
 
 .agents/
 data/
-docs/
+private/
 
 test.py
 
