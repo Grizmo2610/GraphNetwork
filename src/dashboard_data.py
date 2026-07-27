@@ -1,9 +1,10 @@
 import numpy as np
 import pandas as pd
 
+from config import config
 from src.services.simulation.sim_data import SCALE_CONFIG as SC_SIM, generate_dataset
 from src.models.skip_tracing import SCALE_CONFIG as SC_ST, generate as gen_st
-from src.models.identity_resolution import SCALE_CONFIG as SC_IR, generate as gen_ir
+from src.models.identity_resolution import SCALE_CONFIG as SC_IR, generate as gen_irj
 
 INK = "#0B0E11"; PANEL = "#12161C"; LINE = "#232B34"; TEXT = "#D7DEE6"; MUTED = "#7C8A99"
 GOOD = "#33D6A6"; BAD = "#F0654A"; ACCENT = "#4FA8FF"; ACCENT2 = "#C792EA"
@@ -15,23 +16,31 @@ def kpi(label, value, sub=""):
            f'<div class="kpi-sub">{sub}</div></div>'
 
 
-def hbar_chart(rows, w=740, h=None, fmt="{:.2f}", unit=""):
-    row_h = 34
-    h = h or (len(rows) * row_h + 30)
-    pad_l, pad_r, pad_t = 130, 70, 14
-    plot_w = w - pad_l - pad_r
-    vmax = max(r["val"] for r in rows) * 1.15 or 1
+def grouped_bar_chart(groups, series, w=740, h=260, fmt="{:.1f}", unit=""):
+    pad_l, pad_r, pad_t, pad_b = 26, 20, 24, 34
+    plot_w, plot_h = w - pad_l - pad_r, h - pad_t - pad_b
+    vmax = max(g["values"][k] for g in groups for k in g["values"]) * 1.3 or 1
+    n_groups = len(groups)
+    n_series = len(series)
+    slot = plot_w / n_groups
+    bw = slot * 0.72 / n_series
     parts = []
-    for i, r in enumerate(rows):
-        y = pad_t + i * row_h
-        bw = max(r["val"], 0) / vmax * plot_w
-        c = r.get("color", ACCENT)
-        parts.append(f'<text x="{pad_l-10}" y="{y+16}" text-anchor="end" font-size="11.5" fill="{TEXT}" '
-                     f'font-family="IBM Plex Mono,monospace">{r["label"]}</text>')
-        parts.append(f'<rect x="{pad_l}" y="{y+3}" width="{bw:.1f}" height="18" rx="3" fill="{c}"/>')
-        parts.append(f'<text x="{pad_l+bw+8:.1f}" y="{y+16}" font-size="11.5" font-weight="600" fill="{c}" '
-                     f'font-family="IBM Plex Mono,monospace">{fmt.format(r["val"])}{unit}</text>')
-    return f'<svg viewBox="0 0 {w} {h}" width="100%">{"".join(parts)}</svg>'
+    base_y = pad_t + plot_h
+    parts.append(f'<line x1="{pad_l}" x2="{w-pad_r}" y1="{base_y}" y2="{base_y}" stroke="{LINE}" stroke-width="1"/>')
+    for gi, g in enumerate(groups):
+        gx = pad_l + gi * slot + slot * 0.14
+        for si, (key, color, _) in enumerate(series):
+            v = g["values"][key]
+            bh = max(v, 0) / vmax * plot_h
+            bx = gx + si * bw
+            by = base_y - bh
+            parts.append(f'<rect x="{bx:.1f}" y="{by:.1f}" width="{bw*0.82:.1f}" height="{bh:.1f}" fill="{color}" rx="2"/>')
+            parts.append(f'<text x="{bx+bw*0.41:.1f}" y="{by-6:.1f}" text-anchor="middle" font-size="10.5" '
+                         f'font-weight="600" fill="{color}" font-family="IBM Plex Mono,monospace">{fmt.format(v)}{unit}</text>')
+        parts.append(f'<text x="{pad_l+gi*slot+slot/2:.1f}" y="{h-10}" text-anchor="middle" font-size="12.5" '
+                     f'fill="{TEXT}" font-family="IBM Plex Mono,monospace" font-weight="600">{g["label"]}</text>')
+    legend = "".join(f'<span><i style="background:{c}"></i>{lbl}</span>' for _, c, lbl in series)
+    return f'<svg viewBox="0 0 {w} {h}" width="100%">{"".join(parts)}</svg><div class="legend">{legend}</div>'
 
 
 def table(headers, rows):
@@ -91,7 +100,7 @@ for name, cfg in SC_ST.items():
 
 ir_stats = {}
 for name, cfg in SC_IR.items():
-    df = gen_ir(**cfg)
+    df = gen_irj(**cfg)
     dup_groups = df.groupby("true_id").filter(lambda g: len(g) > 1)
     n_dup_persons = dup_groups["true_id"].nunique()
     same_phone = dup_groups.groupby("true_id")["phone"].nunique().eq(1).mean()
@@ -110,9 +119,10 @@ sim_rows = [(k, sim_stats[k]["n"], sim_stats[k]["n_comm"], sim_stats[k]["n_risk_
              f'{sim_stats[k]["avg_degree"]:.1f}', f'{sim_stats[k]["within_edge_pct"]:.1%}',
              f'{sim_stats[k]["default_overall"]:.1%}') for k in SCALES]
 
-sim_risk_bar = hbar_chart(
-    [dict(label=f"{k} · nhóm rủi ro", val=sim_stats[k]["default_risky"] * 100, color=BAD) for k in SCALES]
-    + [dict(label=f"{k} · nhóm thường", val=sim_stats[k]["default_normal"] * 100, color=ACCENT) for k in SCALES],
+sim_risk_bar = grouped_bar_chart(
+    [dict(label=k, values=dict(risky=sim_stats[k]["default_risky"] * 100,
+                                normal=sim_stats[k]["default_normal"] * 100)) for k in SCALES],
+    [("risky", BAD, "Cộng đồng rủi ro cao"), ("normal", ACCENT, "Cộng đồng thường")],
     fmt="{:.1f}", unit="%")
 
 section_sim = f'''<section>
@@ -137,10 +147,12 @@ section_sim = f'''<section>
 
 st_rows = [(k, st_stats[k]["n"], f'{st_stats[k]["lost_rate"]:.1%}',
             f'{st_stats[k]["reach_base"]:.1%}', f'{st_stats[k]["reach_graph"]:.1%}') for k in SCALES]
-st_channel_bar = hbar_chart(
-    [dict(label=f"{k} · người bảo lãnh", val=st_stats[k]["via_guarantor"] * 100, color=ACCENT2) for k in SCALES]
-    + [dict(label=f"{k} · bất kỳ người liên quan", val=st_stats[k]["via_person"] * 100, color=ACCENT) for k in SCALES]
-    + [dict(label=f"{k} · địa chỉ dùng chung", val=st_stats[k]["via_address"] * 100, color=GOOD) for k in SCALES],
+st_channel_bar = grouped_bar_chart(
+    [dict(label=k, values=dict(guarantor=st_stats[k]["via_guarantor"] * 100,
+                                person=st_stats[k]["via_person"] * 100,
+                                address=st_stats[k]["via_address"] * 100)) for k in SCALES],
+    [("guarantor", ACCENT2, "Người bảo lãnh"), ("person", ACCENT, "Bất kỳ người liên quan"),
+     ("address", GOOD, "Địa chỉ dùng chung")],
     fmt="{:.1f}", unit="%")
 
 section_st = f'''<section>
@@ -163,10 +175,12 @@ section_st = f'''<section>
 
 ir_rows = [(k, ir_stats[k]["n_persons"], ir_stats[k]["n_records"], ir_stats[k]["n_dup_persons"],
             f'{ir_stats[k]["dup_rate"]:.1%}') for k in SCALES]
-ir_noise_bar = hbar_chart(
-    [dict(label=f"{k} · giữ cùng SĐT", val=ir_stats[k]["same_phone_rate"] * 100, color=ACCENT) for k in SCALES]
-    + [dict(label=f"{k} · giữ cùng địa chỉ", val=ir_stats[k]["same_addr_rate"] * 100, color=ACCENT2) for k in SCALES]
-    + [dict(label=f"{k} · giữ cùng số định danh", val=ir_stats[k]["same_nid_rate"] * 100, color=GOOD) for k in SCALES],
+ir_noise_bar = grouped_bar_chart(
+    [dict(label=k, values=dict(phone=ir_stats[k]["same_phone_rate"] * 100,
+                                addr=ir_stats[k]["same_addr_rate"] * 100,
+                                nid=ir_stats[k]["same_nid_rate"] * 100)) for k in SCALES],
+    [("phone", ACCENT, "Giữ cùng SĐT"), ("addr", ACCENT2, "Giữ cùng địa chỉ"),
+     ("nid", GOOD, "Giữ cùng số định danh")],
     fmt="{:.1f}", unit="%")
 ir_collision_rows = [(k, ir_stats[k]["phone_collision"], ir_stats[k]["addr_collision"]) for k in SCALES]
 
@@ -231,6 +245,8 @@ section{{margin-bottom:52px;}}
 .prob-desc{{font-size:13px;color:#C3CCD6;line-height:1.7;margin-top:8px;max-width:900px;}}
 .crit-card{{background:{PANEL};border:1px solid {LINE};border-radius:10px;padding:20px 22px;margin-bottom:16px;}}
 .crit-name{{font-size:14.5px;font-weight:700;margin-bottom:8px;}}
+.legend{{display:flex;gap:18px;flex-wrap:wrap;font-family:'IBM Plex Mono',monospace;font-size:11px;color:{MUTED};margin-top:6px;}}
+.legend i{{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:-1px;}}
 table{{width:100%;border-collapse:collapse;font-family:'IBM Plex Mono',monospace;font-size:11.8px;}}
 th,td{{text-align:left;padding:8px 10px;border-bottom:1px solid {LINE};vertical-align:top;}}
 th{{color:{MUTED};font-weight:500;text-transform:uppercase;font-size:10px;letter-spacing:.06em;}}
